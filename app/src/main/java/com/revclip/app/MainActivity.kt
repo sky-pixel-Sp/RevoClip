@@ -307,7 +307,7 @@ class MainActivity : AppCompatActivity() {
             }
             .build()
 
-        client.newCall(request).execute().use { response ->
+        return client.newCall(request).execute().use { response ->
             val raw = response.body?.string().orEmpty()
             if (!response.isSuccessful) throw IllegalStateException(explainHttpError(response.code, raw))
             val json = JSONObject(raw)
