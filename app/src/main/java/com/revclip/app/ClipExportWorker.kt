@@ -8,8 +8,6 @@ import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.provider.MediaStore
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.MediaItem
@@ -22,7 +20,6 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -32,15 +29,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
+import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class ClipExportWorker(
     appContext: Context,
     params: WorkerParameters
 ) : CoroutineWorker(appContext, params) {
-
-    @Volatile
-    private var activeTransformer: Transformer? = null
 
     override suspend fun doWork(): Result {
         val source = inputData.getString(KEY_URI)
@@ -68,9 +63,7 @@ class ClipExportWorker(
         return try {
             setForeground(createForegroundInfo(0))
             val transformer = withContext(Dispatchers.Main.immediate) {
-                Transformer.Builder(applicationContext).build().also {
-                    activeTransformer = it
-                }
+                Transformer.Builder(applicationContext).build()
             }
 
             val editedItem = EditedMediaItem.Builder(mediaItem).build()
@@ -111,21 +104,8 @@ class ClipExportWorker(
                 workDataOf(KEY_ERROR to (error.message ?: "Video export failed"))
             )
         } finally {
-            withContext(NonCancellable + Dispatchers.Main.immediate) {
-                activeTransformer = null
-            }
             output.delete()
         }
-    }
-
-    override fun onStopped() {
-        val transformer = activeTransformer
-        if (transformer != null) {
-            Handler(Looper.getMainLooper()).post {
-                runCatching { transformer.cancel() }
-            }
-        }
-        super.onStopped()
     }
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
@@ -210,7 +190,7 @@ class ClipExportWorker(
                 runCatching { removeListener(this) }
                 if (continuation.isActive) {
                     runCatching {
-                        continuation.resumeWith(Result.success(exportResult))
+                        continuation.resume(exportResult)
                     }
                 }
             }
