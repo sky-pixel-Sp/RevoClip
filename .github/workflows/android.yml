@@ -1,14 +1,16 @@
 name: Android APK
 on:
   push:
-    branches: [ main ]
+    branches: [ main, "fix/**" ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
-  build:
+  test-and-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,17 +19,17 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
-      - name: Set up Gradle 8.9
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
+          java-version: "17"
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+      - name: Run unit tests
+        run: ./gradlew --no-daemon testDebugUnitTest
       - name: Build debug APK
-        run: gradle assembleDebug
+        run: ./gradlew --no-daemon assembleDebug
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: RevoClip-debug-apk
+          name: RevoClip-v0.2-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
