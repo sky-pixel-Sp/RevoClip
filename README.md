@@ -1,24 +1,19 @@
 # RevoClip
 
-RevoClip is an Android video editor combining a CapCut-style manual editing workflow with an OpusClip-style AI-assisted short-form clipping workflow.
+RevoClip combines a CapCut-inspired manual video editor with an OpusClip-inspired AI highlight workflow.
 
-## Product direction
+## MVP foundation
+- Android 14+ (minSdk 34), Kotlin, AndroidX.
+- Import videos using Android's document picker.
+- AI highlight suggestions from timestamped transcript text using OpenRouter, OpenAI, Claude, or DeepSeek.
+- Actual local MP4 trimming/export using AndroidX Media3 Transformer.
+- Durable background export jobs through WorkManager.
+- Provider API keys are held only in memory for the current app session.
 
-- Import long-form videos and review them in a persistent project queue.
-- AI-assisted highlight discovery proposes candidate segments; the user reviews and selects them before export.
-- Real video trimming and MP4 export are performed locally with AndroidX Media3 Transformer, not by renaming files.
-- Manual editing controls complement automatic clipping: trim ranges, aspect-ratio presets (9:16, 1:1, 16:9), and captions.
-- Background processing uses WorkManager so queued jobs can be revisited after the app is closed or restarted.
-- AI provider adapters are designed for OpenRouter, Anthropic Claude, OpenAI, and DeepSeek. API keys are entered by the user and must never be committed.
-
-## Android support
-
-The app targets Android 14+ (minSdk 34). The initial implementation is an MVP foundation; advanced capabilities such as diarization, face tracking, animated captions, multi-track timelines, and automatic subject reframing are planned separately and must not be represented as implemented until they are built and tested.
+## Honest scope
+This first MVP analyzes user-provided timestamped transcripts. It does not yet perform automatic speech-to-text, raw video-frame understanding, face tracking, speaker diarization, animated captions, multi-track editing, transitions, filters, or social publishing. AI suggestions must be reviewed before export.
 
 ## Build
+Requires JDK 17 and Android SDK 35. Run gradle assembleDebug or open in Android Studio. GitHub Actions uploads a RevoClip-debug-apk artifact on pushes to main, pull requests, and manual dispatch.
 
-Open the project in Android Studio or run `./gradlew assembleDebug` with JDK 17 and the Android SDK installed. GitHub Actions builds a debug APK and uploads it as the `RevoClip-debug-apk` artifact.
-
-## Security
-
-Do not put API keys, signing keys, or personal media in source control. AI analysis is optional; video rendering is local.
+Never commit API keys, signing credentials, or personal media.
