@@ -328,7 +328,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun explainHttpError(code: Int, body: String): String {
-        val detail = body.replace(Regex("""\\s+"""), " ").take(220)
+        val detail = body.replace(Regex("""\s+"""), " ").take(220)
         val explanation = when (code) {
             400 -> "Permintaan ditolak. Periksa format prompt dan kompatibilitas parameter model."
             401 -> "API key salah atau tidak valid (401)."
@@ -493,8 +493,8 @@ class MainActivity : AppCompatActivity() {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or
                 android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
         } else if (decimal) {
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or
-                android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         }
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
