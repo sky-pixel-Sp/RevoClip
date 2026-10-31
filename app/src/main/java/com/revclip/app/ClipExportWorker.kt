@@ -8,6 +8,8 @@ import androidx.media3.transformer.Transformer
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -28,17 +30,20 @@ class ClipExportWorker(appContext: android.content.Context, params: WorkerParame
             .setClippingConfiguration(MediaItem.ClippingConfiguration.Builder()
                 .setStartPositionMs(startMs).setEndPositionMs(endMs).build()).build()
         return try {
-            val transformer = Transformer.Builder(applicationContext).addListener(object : Transformer.Listener {
-                override fun onCompleted(composition: androidx.media3.transformer.Composition,
-                    exportResult: androidx.media3.transformer.ExportResult) { latch.countDown() }
-                override fun onError(composition: androidx.media3.transformer.Composition,
-                    exportResult: androidx.media3.transformer.ExportResult,
-                    exportException: androidx.media3.transformer.ExportException) {
-                    failure.set(exportException); latch.countDown()
+            val transformer = withContext(Dispatchers.Main) {
+                Transformer.Builder(applicationContext).addListener(object : Transformer.Listener {
+                    override fun onCompleted(composition: androidx.media3.transformer.Composition,
+                        exportResult: androidx.media3.transformer.ExportResult) { latch.countDown() }
+                    override fun onError(composition: androidx.media3.transformer.Composition,
+                        exportResult: androidx.media3.transformer.ExportResult,
+                        exportException: androidx.media3.transformer.ExportException) {
+                        failure.set(exportException); latch.countDown()
+                    }
+                }).build().also {
+                    it.start(EditedMediaItem.Builder(item).build(), output.absolutePath)
                 }
-            }).build()
+            }
             setProgress(workDataOf("progress" to 1))
-            transformer.start(EditedMediaItem.Builder(item).build(), output.absolutePath)
             if (!latch.await(2, TimeUnit.HOURS)) {
                 transformer.cancel(); output.delete(); return Result.retry()
             }
