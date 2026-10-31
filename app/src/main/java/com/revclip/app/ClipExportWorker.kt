@@ -22,6 +22,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -31,7 +32,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
-import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
 
 class ClipExportWorker(
@@ -111,7 +111,7 @@ class ClipExportWorker(
                 workDataOf(KEY_ERROR to (error.message ?: "Video export failed"))
             )
         } finally {
-            withContext(Dispatchers.Main.immediate) {
+            withContext(NonCancellable + Dispatchers.Main.immediate) {
                 activeTransformer = null
             }
             output.delete()
